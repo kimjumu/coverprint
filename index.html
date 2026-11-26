@@ -22,7 +22,10 @@ main{max-width:1400px;margin:0 auto;padding:18px}
 .card h2{margin:0 0 11px;font-size:15px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .lbl{font-weight:600;font-size:13px}
-input,select,button{font:inherit;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:#fff;color:inherit}
+input,select,button,textarea{font:inherit;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:#fff;color:inherit}
+textarea{resize:vertical;line-height:1.3;width:100%}
+td textarea{height:52px;min-height:34px}
+#gOrg{width:186px;height:52px;vertical-align:middle}
 button{cursor:pointer}
 button:hover{background:#f1f5f9}
 button.p{background:var(--pri);color:#fff;border-color:var(--pri)}
@@ -70,7 +73,8 @@ td.ord b{display:block;font-size:14px;color:#0f172a}
   justify-content:center;text-align:center;padding:0.6mm 1mm;overflow:hidden}
 .cover .fr:last-child{border-bottom:none}
 .cover .fr .date{width:100%;white-space:nowrap;overflow:hidden;line-height:1.25}
-.cover .fr .org{width:100%;line-height:1.22;word-break:break-all}
+.cover .fr .org{width:100%}
+.cover .fr .org span{display:block;white-space:nowrap;line-height:1.22}
 
 @page{size:A4 landscape;margin:0}
 @media print{
@@ -96,7 +100,7 @@ td.ord b{display:block;font-size:14px;color:#0f172a}
     <h2>공통 설정 · 일괄 적용</h2>
     <div class="row">
       <span class="lbl">기관명</span>
-      <input id="gOrg" type="text" placeholder="예: 광주여자고등학교" style="width:180px">
+      <textarea id="gOrg" rows="2" placeholder="예: 광주여자고등학교"></textarea>
       <button id="applyOrg" class="sm">일괄적용</button>
       <span class="sep"></span>
       <span class="lbl">생산연도</span>
@@ -145,7 +149,7 @@ td.ord b{display:block;font-size:14px;color:#0f172a}
     </div>
     <div class="row" style="margin-top:10px">
       <button id="addRow" class="p">표지 행 추가</button>
-      <span class="note">책 번호는 <b>1/7</b> → 전 7책중 1책, 날짜는 <b>0701</b> → 7.1. 로 자동 변환됩니다.</span>
+      <span class="note">책 번호는 <b>1/7</b> → 전 7책중 1책, 날짜는 <b>0701</b> → 7.1. 로 자동 변환됩니다. 기관명 칸에서 <b>Enter</b>를 누르면 그 줄바꿈대로 인쇄되고, 줄바꿈이 없으면 한 줄에 다 들어가도록 글자가 줄어듭니다.</span>
     </div>
     <datalist id="titles"></datalist>
   </section>
@@ -264,7 +268,7 @@ function rowHTML(c,i,n){
       <div class="hintline${v.error?' err':''}" data-vol="${i}">${esc(v.error||v.text)}</div></td>
     <td><div class="dpair"><input data-i="${i}" data-f="d1" placeholder="0701" value="${esc(c.d1)}">~<input data-i="${i}" data-f="d2" placeholder="0721" value="${esc(c.d2)}"></div>
       <div class="hintline" data-per="${i}">${esc(period(c))}</div></td>
-    <td><input data-i="${i}" data-f="org" value="${esc(c.org)}"></td>
+    <td><textarea data-i="${i}" data-f="org" rows="2" placeholder="광주여자\n고등학교">${esc(c.org)}</textarea></td>
     <td><input data-i="${i}" data-f="width" class="w58" value="${esc(c.width)}"></td>
     <td class="acts">
       <button class="sm" data-act="dup" data-i="${i}">복제</button>
@@ -287,6 +291,8 @@ function coverHTML(c){
   const t = String(c.title||'').replace(/\s+/g,'');
   const chars = [...t];
   const v = parseVol(c.vol);
+  // 기관명: Enter 로 나눈 줄은 그대로, 줄바꿈이 없으면 한 줄에 전부 (글자를 줄여서 맞춤)
+  const orgLines = String(c.org||'').split(/\r?\n/).map(s=>s.trim()).filter(s=>s!=='');
   // [내용, 칸높이(mm), 글자비율, 굵게] — 칸 높이는 너비와 무관하게 고정되어 표지끼리 줄이 맞습니다
   const rows = [
     ['생산연도',                                          8.5, 0.20,  false],
@@ -305,8 +311,9 @@ function coverHTML(c){
     <div class="ttl">${chars.map(ch=>`<i style="font-size:${tf.toFixed(2)}px">${esc(ch)}</i>`).join('')}</div>
     <div class="fr" style="height:${(DH*S.k).toFixed(2)}mm">
       <div class="date" style="font-size:${px(0.17,DH).toFixed(2)}px">${esc(period(c))}</div></div>
-    <div class="fr" style="height:${(OH*S.k).toFixed(2)}mm">
-      <div class="org" style="font-size:${(Math.min(base*0.185,6)*MM*S.k).toFixed(2)}px">${esc(c.org||'')}</div></div>
+    <div class="fr orgrow" style="height:${(OH*S.k).toFixed(2)}mm">
+      <div class="org" style="font-size:${(Math.min(base*0.185,6)*MM*S.k).toFixed(2)}px">${
+        orgLines.map(l=>`<span>${esc(l)}</span>`).join('')}</div></div>
   </div>`;
 }
 
@@ -344,17 +351,8 @@ function fitAll(){
   document.querySelectorAll('.cover').forEach(cv=>{
     cv.querySelectorAll('.r span, .fr .date').forEach(el=>fitWidth(el, 4));
     fitBox(cv.querySelector('.ttl'), 5);
-    // 기관명은 사진처럼 줄바꿈해 쓰고, 고정된 칸 높이를 넘으면 그때 줄입니다
-    const org = cv.querySelector('.fr .org');
-    if (org && org.textContent.trim()){
-      const box = org.parentElement, bs = getComputedStyle(box);
-      const availH = box.clientHeight - parseFloat(bs.paddingTop) - parseFloat(bs.paddingBottom);
-      for (let pass=0; pass<5; pass++){
-        if (org.scrollHeight <= availH + 1) break;
-        const fs = parseFloat(getComputedStyle(org).fontSize);
-        org.style.fontSize = Math.max(4, fs*0.88)+'px';
-      }
-    }
+    // 기관명: 줄바꿈한 그대로 두되, 칸의 가로·세로를 넘으면 글자를 줄여 맞춥니다
+    fitBox(cv.querySelector('.orgrow'), 4);
   });
 }
 
