@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>지출증빙 표지 서식 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nanum+Gothic:wght@400;700;800&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pri:#1d4ed8; --bd:#cbd5e1; --bg:#eef1f6; --ink:#0f172a;
+  --k:1; --ff:'Noto Sans KR', sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-size:14px}
+header{background:#1e3a8a;color:#fff;padding:14px 22px}
+header h1{margin:0;font-size:19px}
+header p{margin:4px 0 0;opacity:.85;font-size:12.5px}
+main{max-width:1400px;margin:0 auto;padding:18px}
+.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:15px}
+.card h2{margin:0 0 11px;font-size:15px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lbl{font-weight:600;font-size:13px}
+input,select,button,textarea{font:inherit;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:#fff;color:inherit}
+textarea{resize:vertical;line-height:1.3;width:100%}
+td textarea{height:52px;min-height:34px}
+#gOrg{width:186px;height:52px;vertical-align:middle}
+button{cursor:pointer}
+button:hover{background:#f1f5f9}
+button.p{background:var(--pri);color:#fff;border-color:var(--pri)}
+button.p:hover{background:#1a43b8}
+button.d{color:#b91c1c}
+button.sm{font-size:12px;padding:3px 7px}
+.note{color:#64748b;font-size:12px}
+.sep{width:1px;height:22px;background:#e2e8f0;margin:0 4px}
+
+/* ---- table ---- */
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1080px}
+th,td{border-bottom:1px solid #e8edf3;padding:6px 5px;text-align:left;vertical-align:top}
+th{background:#f8fafc;font-size:12.5px;white-space:nowrap;color:#475569;font-weight:600}
+td input,td select{width:100%}
+td.ord{width:46px;text-align:center;vertical-align:middle;color:#64748b;font-size:12px;white-space:nowrap}
+td.ord b{display:block;font-size:14px;color:#0f172a}
+.w70{width:76px}.w58{width:62px}.w88{width:92px}
+.chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.chips button{font-size:11.5px;padding:2px 6px;border-radius:5px;color:#475569}
+.chips button.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.dpair{display:flex;gap:3px;align-items:center;white-space:nowrap}
+.dpair input{width:58px}
+.hintline{font-size:11.5px;color:#1d4ed8;margin-top:3px;min-height:15px;white-space:nowrap}
+.hintline.err{color:#b91c1c}
+.acts{white-space:nowrap;width:92px}
+
+/* ---- preview / cover ---- */
+#pvScroll{overflow:hidden}
+#pv{transform-origin:top left}
+.sheet{background:var(--bgc,#ffffff);width:297mm;height:210mm;padding:5mm;margin:0 auto 14px;
+  box-shadow:0 0 0 1px #94a3b8;display:flex;justify-content:flex-start;align-items:flex-start;
+  gap:2mm;overflow:hidden;page-break-after:always}
+.cover{height:200mm;border:0.6mm solid #000;display:flex;flex-direction:column;
+  background:transparent;color:#000;font-family:var(--ff);overflow:hidden;flex:0 0 auto}
+.cover.cut{outline:1px dashed #94a3b8;outline-offset:1px}
+.cover .r{border-bottom:0.4mm solid #000;text-align:center;padding:1.1mm 1mm;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.cover .r span{display:block;width:100%;white-space:nowrap;overflow:hidden;line-height:1.25}
+.cover .r.b span{font-weight:700}
+.cover .ttl{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;overflow:hidden;padding:2mm 0.8mm;border-bottom:0.4mm solid #000}
+.cover .ttl i{font-style:normal;font-weight:800;line-height:1.1;display:block}
+.cover .fr{flex:0 0 auto;border-bottom:0.4mm solid #000;display:flex;align-items:center;
+  justify-content:center;text-align:center;padding:0.6mm 1mm;overflow:hidden}
+.cover .fr:last-child{border-bottom:none}
+.cover .fr .date{width:100%;white-space:nowrap;overflow:hidden;line-height:1.25}
+.cover .fr .org{width:100%}
+.cover .fr .org span{display:block;white-space:nowrap;line-height:1.22}
+
+@page{size:A4 landscape;margin:0}
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff}
+  .noprint{display:none!important}
+  main{padding:0;max-width:none}
+  .card{box-shadow:none;padding:0;margin:0;border-radius:0}
+  #pvScroll{overflow:visible;height:auto!important}
+  #pv{transform:none!important}
+  .sheet{box-shadow:none;margin:0}
+  .cover.cut{outline:none}
+}
+</style>
+</head>
+<body>
+<header class="noprint">
+  <h1>증빙표지 만들기</h1>
+  <p>문서철 표지를 행 단위로 입력하면 A4 가로 용지에 실측 크기로 배치합니다.</p>
+</header>
+
+<main>
+  <section class="card noprint">
+    <h2>공통 설정 · 일괄 적용</h2>
+    <div class="row">
+      <span class="lbl">기관명</span>
+      <textarea id="gOrg" rows="2" placeholder="예: 광주여자고등학교"></textarea>
+      <button id="applyOrg" class="sm">일괄적용</button>
+      <span class="sep"></span>
+      <span class="lbl">생산연도</span>
+      <input id="gYear" type="number" class="w70">
+      <button id="applyYear" class="sm">일괄적용</button>
+      <span class="sep"></span>
+      <span class="lbl">월</span>
+      <select id="gMonth" class="w70"></select>
+      <button id="applyMonth" class="sm">일괄적용</button>
+      <span class="sep"></span>
+      <span class="lbl">보존기간</span>
+      <select id="gKeep" class="w88"></select>
+      <button id="applyKeep" class="sm">일괄적용</button>
+      <span class="sep"></span>
+      <span class="lbl">회계연도</span>
+      <input id="gAcct" type="text" class="w70" placeholder="2026">
+      <button id="applyAcct" class="sm">일괄적용</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span class="lbl">연속생성</span>
+      <select id="cMode">
+        <option value="vol">책수별 — 전 N책중 1책 … N책</option>
+        <option value="month">월별 — 1월 ~ 12월 (각 1책)</option>
+      </select>
+      <input id="cN" type="number" min="1" max="40" value="7" class="w58" title="전체 책 수">
+      <button id="seq" class="p">생성</button>
+      <span class="note">첫 행의 제목·기관명·너비를 그대로 복사해 만듭니다.</span>
+      <span style="margin-left:auto"></span>
+      <button id="sample">샘플 불러오기</button>
+      <button id="reset" class="d">전체 비우기</button>
+    </div>
+  </section>
+
+  <section class="card noprint">
+    <h2>표지 목록 <span class="note">(위에서부터 인쇄 순서)</span></h2>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>순서</th><th>문서철 제목</th><th>생산연도</th><th>월</th><th>보존기간</th>
+            <th>회계연도</th><th>책 번호</th><th>날짜</th><th>기관명</th><th>너비(cm)</th><th>관리</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="addRow" class="p">표지 행 추가</button>
+      <span class="note">책 번호는 <b>1/7</b> → 전 7책중 1책, 날짜는 <b>0701</b> → 7.1. 로 자동 변환됩니다. 기관명 칸에서 <b>Enter</b>를 누르면 그 줄바꿈대로 인쇄되고, 줄바꿈이 없으면 한 줄에 다 들어가도록 글자가 줄어듭니다.</span>
+    </div>
+    <datalist id="titles"></datalist>
+  </section>
+
+  <section class="card">
+    <h2 class="noprint">인쇄 미리보기 <span class="note" id="pcount"></span></h2>
+    <div class="row noprint" style="margin-bottom:12px">
+      <span class="lbl">글꼴</span>
+      <select id="font">
+        <option value="'Noto Sans KR', sans-serif">본고딕 (기본)</option>
+        <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
+        <option value="'Noto Serif KR', serif">본명조</option>
+        <option value="'Malgun Gothic','맑은 고딕', sans-serif">맑은 고딕</option>
+        <option value="'Batang','바탕', serif">바탕</option>
+      </select>
+      <span class="sep"></span>
+      <span class="lbl">글씨 배율</span>
+      <button id="fsMinus" class="sm">−5%</button>
+      <span id="kVal" class="note" style="min-width:38px;text-align:center">100%</span>
+      <button id="fsPlus" class="sm">+5%</button>
+      <span class="sep"></span>
+      <span class="lbl">배경색</span>
+      <input id="bgColor" type="color" value="#ffffff" style="padding:2px;width:44px;height:32px">
+      <button id="bgWhite" class="sm">흰색</button><button id="bgBlue" class="sm">연파랑</button><button id="bgSky" class="sm">하늘색</button>
+      <label><input id="cut" type="checkbox" checked> 절취선 표시</label>
+      <span style="margin-left:auto"></span>
+      <button id="printBtn" class="p">A4 가로 인쇄</button>
+    </div>
+    <div class="note noprint" id="msg" style="margin-bottom:8px"></div>
+    <div id="pvScroll"><div id="pv"></div></div>
+  </section>
+
+  <p class="note noprint" style="text-align:center;margin:18px 0">
+    인쇄 설정에서 용지 <b>A4 · 가로</b>, 여백 <b>없음</b>, 배율 <b>100%</b>, 배경 그래픽 켜기로 맞추면 실측 크기로 나옵니다.
+  </p>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const MM = 96 / 25.4;                       // 1mm in CSS px
+const SHEET_W = 297 - 10;                   // usable width inside 5mm padding
+const GAP = 2;                              // mm between covers
+const TITLES = ["지출증빙서","지출결의서","징수결의서","원천징수영수증","계약서류","세입세출외현금","법인카드영수증"];
+const KEEPS  = ["1년보존","3년보존","5년보존","10년보존","30년보존","준영구","영구"];
+const KEY = "coverprint-v2";
+
+let S = {
+  org:"", year:new Date().getFullYear(), month:String(new Date().getMonth()+1),
+  keep:"5년보존", acct:String(new Date().getFullYear()),
+  font:"'Noto Sans KR', sans-serif", k:1, cut:true, covers:[]
+};
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch(e) {}
+
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+const newCover = (o={}) => ({
+  title:"지출증빙서", year:S.year, month:S.month, keep:S.keep, acct:S.acct,
+  vol:"1/1", d1:"", d2:"", org:S.org, width:2.5, ...o
+});
+
+/* ---------- parsers ---------- */
+// "1/7" -> {text:"전 7책중 1책"}
+function parseVol(raw){
+  const s = String(raw||'').trim();
+  if (!s) return {text:''};
+  let m = s.match(/^(\d+)\s*[\/\-~ ]\s*(\d+)$/);
+  if (m) {
+    const cur=+m[1], tot=+m[2];
+    if (cur<1||tot<1) return {error:'1 이상'};
+    if (cur>tot) return {error:'앞 숫자가 더 큽니다'};
+    return {text:`전 ${tot}책중 ${cur}책`};
+  }
+  m = s.match(/^전\s*(\d+)\s*책\s*중\s*(\d+)\s*책$/);
+  if (m) return {text:`전 ${+m[1]}책중 ${+m[2]}책`};
+  return {error:'예: 1/7'};
+}
+// "0701" | "7.1" | "7/1" | "2026.07.01" -> {text:"7.1."}
+function parseDate(raw){
+  const s = String(raw||'').trim();
+  if (!s) return {text:''};
+  let mo, d;
+  if (/\D/.test(s)) {
+    const p = s.split(/\D+/).filter(Boolean).map(Number);
+    if (p.length>=3 && String(p[0]).length===4) { mo=p[1]; d=p[2]; }
+    else if (p.length>=2) { mo=p[0]; d=p[1]; }
+    else return {error:'예: 7.1'};
+  } else if (s.length===3) { mo=+s[0]; d=+s.slice(1); }
+    else if (s.length===4) { mo=+s.slice(0,2); d=+s.slice(2); }
+    else if (s.length===8) { mo=+s.slice(4,6); d=+s.slice(6); }
+    else return {error:'예: 0701'};
+  if (!(mo>=1&&mo<=12&&d>=1&&d<=31)) return {error:'날짜 확인'};
+  return {text:`${mo}.${d}.`};
+}
+function period(c){
+  const a=parseDate(c.d1), b=parseDate(c.d2);
+  if (a.error||b.error) return '';
+  if (a.text&&b.text) return a.text+'~'+b.text;
+  return a.text||b.text||'';
+}
+
+/* ---------- table ---------- */
+function rowHTML(c,i,n){
+  const v = parseVol(c.vol);
+  const chips = TITLES.map(t =>
+    `<button class="sm${t===c.title?' on':''}" data-act="settitle" data-i="${i}" data-v="${esc(t)}">${esc(t)}</button>`).join('');
+  return `<tr>
+    <td class="ord"><b>${i+1}</b>
+      <button class="sm" data-act="up" data-i="${i}" ${i===0?'disabled':''}>▲</button>
+      <button class="sm" data-act="down" data-i="${i}" ${i===n-1?'disabled':''}>▼</button></td>
+    <td><input data-i="${i}" data-f="title" list="titles" value="${esc(c.title)}">
+      <div class="chips" data-chips="${i}">${chips}</div></td>
+    <td><input data-i="${i}" data-f="year" class="w70" value="${esc(c.year)}"></td>
+    <td><select data-i="${i}" data-f="month" class="w58">${
+      Array.from({length:12},(_,m)=>`<option value="${m+1}" ${String(c.month)===String(m+1)?'selected':''}>${m+1}월</option>`).join('')}</select></td>
+    <td><select data-i="${i}" data-f="keep" class="w88">${
+      KEEPS.map(k=>`<option ${k===c.keep?'selected':''}>${k}</option>`).join('')}</select></td>
+    <td><input data-i="${i}" data-f="acct" class="w70" value="${esc(c.acct)}"></td>
+    <td><input data-i="${i}" data-f="vol" class="w70" placeholder="1/7" value="${esc(c.vol)}">
+      <div class="hintline${v.error?' err':''}" data-vol="${i}">${esc(v.error||v.text)}</div></td>
+    <td><div class="dpair"><input data-i="${i}" data-f="d1" placeholder="0701" value="${esc(c.d1)}">~<input data-i="${i}" data-f="d2" placeholder="0721" value="${esc(c.d2)}"></div>
+      <div class="hintline" data-per="${i}">${esc(period(c))}</div></td>
+    <td><textarea data-i="${i}" data-f="org" rows="2" placeholder="광주여자\n고등학교">${esc(c.org)}</textarea></td>
+    <td><input data-i="${i}" data-f="width" class="w58" value="${esc(c.width)}"></td>
+    <td class="acts">
+      <button class="sm" data-act="dup" data-i="${i}">복제</button>
+      <button class="sm d" data-act="del" data-i="${i}">삭제</button></td>
+  </tr>`;
+}
+function renderTable(){
+  const n = S.covers.length;
+  $('#tbody').innerHTML = n
+    ? S.covers.map((c,i)=>rowHTML(c,i,n)).join('')
+    : `<tr><td colspan="11" class="note" style="padding:18px;text-align:center">표지 행이 없습니다. “표지 행 추가” 또는 “샘플 불러오기”를 눌러 주세요.</td></tr>`;
+}
+
+/* ---------- cover render ---------- */
+function coverHTML(c){
+  const w = Math.max(1.2, +c.width || 2.5);            // cm
+  const base = Math.min(w, 3.0) * 10;                  // mm — 글자 기준폭 (넓어져도 상한)
+  // 글자 = 기준폭 비율, 단, 칸 높이를 넘지 않도록 제한
+  const px = (f, hmm) => Math.min(base*f, hmm*0.70) * MM * S.k;
+  const t = String(c.title||'').replace(/\s+/g,'');
+  const chars = [...t];
+  const v = parseVol(c.vol);
+  // 기관명: Enter 로 나눈 줄은 그대로, 줄바꿈이 없으면 한 줄에 전부 (글자를 줄여서 맞춤)
+  const orgLines = String(c.org||'').split(/\r?\n/).map(s=>s.trim()).filter(s=>s!=='');
+  // [내용, 칸높이(mm), 글자비율, 굵게] — 칸 높이는 너비와 무관하게 고정되어 표지끼리 줄이 맞습니다
+  const rows = [
+    ['생산연도',                                          8.5, 0.20,  false],
+    [c.year ? String(c.year) : '',                        9.5, 0.23,  true ],
+    [c.month ? c.month+'월' : '',                        10.5, 0.27,  true ],
+    [c.keep || '',                                        8.5, 0.175, false],
+    [c.acct ? String(c.acct).replace(/회계$/,'')+'회계':'',9.5, 0.215, true ],
+    [v.error ? '' : v.text,                               8.5, 0.175, false],
+    ['제 목',                                             8.5, 0.19,  false]
+  ];
+  const tf = Math.min(base*0.58, 14) * MM * S.k;       // 제목 글자 기준 크기(높이에 맞춰 다시 줄어듦)
+  const DH = 8.5, OH = 13;                             // 날짜칸·기관명칸 높이(mm) — 내용과 무관하게 고정
+  return `<div class="cover${S.cut?' cut':''}" style="width:${w*10}mm">
+    ${rows.map(([txt,h,f,b])=>
+      `<div class="r${b?' b':''}" style="height:${(h*S.k).toFixed(2)}mm"><span style="font-size:${px(f,h).toFixed(2)}px">${esc(txt)}</span></div>`).join('')}
+    <div class="ttl">${chars.map(ch=>`<i style="font-size:${tf.toFixed(2)}px">${esc(ch)}</i>`).join('')}</div>
+    <div class="fr" style="height:${(DH*S.k).toFixed(2)}mm">
+      <div class="date" style="font-size:${px(0.17,DH).toFixed(2)}px">${esc(period(c))}</div></div>
+    <div class="fr orgrow" style="height:${(OH*S.k).toFixed(2)}mm">
+      <div class="org" style="font-size:${(Math.min(base*0.185,6)*MM*S.k).toFixed(2)}px">${
+        orgLines.map(l=>`<span>${esc(l)}</span>`).join('')}</div></div>
+  </div>`;
+}
+
+/* shrink text that overflows its box — two measured passes, no loops */
+function fitWidth(el, minPx){
+  if (!el || !el.clientWidth) return;
+  for (let pass=0; pass<2; pass++){
+    const avail = el.clientWidth, need = el.scrollWidth;
+    if (need <= avail + 0.5) return;
+    const fs = parseFloat(getComputedStyle(el).fontSize);
+    const next = Math.max(minPx, fs * (avail/need) * 0.97);
+    if (next >= fs) return;
+    el.style.fontSize = next + 'px';
+  }
+}
+function fitBox(el, minPx){      // 제목: 세로로 쌓인 글자가 남은 높이·너비 안에 들어오게 줄임
+  if (!el || !el.clientHeight) return;
+  const cs = getComputedStyle(el);
+  const availH = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const availW = el.clientWidth  - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const kids = [...el.children];
+  if (!kids.length || availH <= 0 || availW <= 0) return;
+  for (let pass=0; pass<4; pass++){
+    let hNeed=0, wNeed=0;
+    kids.forEach(k=>{ hNeed += k.offsetHeight; wNeed = Math.max(wNeed, k.scrollWidth); });
+    const r = Math.min(hNeed>availH+0.5 ? availH/hNeed : 1, wNeed>availW+0.5 ? availW/wNeed : 1);
+    if (r >= 0.995) return;
+    kids.forEach(k=>{
+      const fs = parseFloat(getComputedStyle(k).fontSize);
+      k.style.fontSize = Math.max(minPx, fs * r * 0.98) + 'px';
+    });
+  }
+}
+function fitAll(){
+  document.querySelectorAll('.cover').forEach(cv=>{
+    cv.querySelectorAll('.r span, .fr .date').forEach(el=>fitWidth(el, 4));
+    fitBox(cv.querySelector('.ttl'), 5);
+    // 기관명: 줄바꿈한 그대로 두되, 칸의 가로·세로를 넘으면 글자를 줄여 맞춥니다
+    fitBox(cv.querySelector('.orgrow'), 4);
+  });
+}
+
+/* ---------- preview ---------- */
+function preview(){
+  const cs = S.covers;
+  if (!cs.length){ $('#pv').innerHTML=''; $('#pvScroll').style.height='auto'; $('#pcount').textContent=''; return; }
+  const pages = []; let cur = [], used = 0;
+  cs.forEach(c=>{
+    const w = Math.max(1.2, +c.width || 2.5) * 10;
+    const add = cur.length ? w + GAP : w;
+    if (cur.length && used + add > SHEET_W){ pages.push(cur); cur=[]; used=0; }
+    cur.push(c); used += cur.length===1 ? w : add;
+  });
+  if (cur.length) pages.push(cur);
+  $('#pv').style.transform = 'none';   // 측정 전 축소 해제 (축소 상태로 재면 크기가 틀어짐)
+  $('#pv').innerHTML = pages.map(pg=>`<div class="sheet">${pg.map(coverHTML).join('')}</div>`).join('');
+  $('#pcount').textContent = `A4 ${pages.length}장 / 표지 ${cs.length}권`;
+  fitAll();
+  scale();
+}
+function scale(){
+  const box = $('#pvScroll'), pv = $('#pv');
+  if (!pv.firstChild){ box.style.height='auto'; return; }
+  pv.style.transform='none';
+  const natW = 297*MM, natH = pv.getBoundingClientRect().height;
+  const z = Math.min(1, box.clientWidth / natW);
+  pv.style.transform = `scale(${z})`;
+  box.style.height = (natH*z)+'px';
+}
+
+let tmr=null;
+const refresh = (table=true) => { save(); if (table) renderTable(); preview(); };
+const softRefresh = () => { save(); clearTimeout(tmr); tmr=setTimeout(preview, 70); };
+
+/* ---------- globals ---------- */
+function applyGlobals(){
+  document.documentElement.style.setProperty('--k', S.k);
+  document.documentElement.style.setProperty('--ff', S.font);
+  $('#gOrg').value=S.org; $('#gYear').value=S.year; $('#gAcct').value=S.acct;
+  $('#gMonth').value=S.month; $('#gKeep').value=S.keep;
+  $('#font').value=S.font; $('#cut').checked=S.cut;
+  S.bg=S.bg||'#ffffff'; document.documentElement.style.setProperty('--bgc',S.bg); $('#bgColor').value=S.bg;
+  $('#kVal').textContent = Math.round(S.k*100)+'%';
+}
+
+/* ---------- events ---------- */
+document.addEventListener('input', e=>{
+  const t=e.target; if (t.dataset.f===undefined || t.dataset.i===undefined) return;
+  const i=+t.dataset.i, c=S.covers[i]; if (!c) return;
+  c[t.dataset.f] = t.value;
+  if (t.dataset.f==='vol'){
+    const v=parseVol(c.vol), h=document.querySelector(`[data-vol="${i}"]`);
+    if (h){ h.textContent = v.error||v.text; h.classList.toggle('err', !!v.error); }
+  }
+  if (t.dataset.f==='d1'||t.dataset.f==='d2'){
+    const h=document.querySelector(`[data-per="${i}"]`);
+    const a=parseDate(c.d1), b=parseDate(c.d2);
+    if (h){ const err=a.error||b.error; h.textContent = err||period(c); h.classList.toggle('err', !!err); }
+  }
+  if (t.dataset.f==='title'){
+    const box=document.querySelector(`[data-chips="${i}"]`);
+    if (box) box.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.v===c.title));
+  }
+  softRefresh();
+});
+document.addEventListener('change', e=>{
+  const t=e.target;
+  if (t.dataset.f!==undefined && t.dataset.i!==undefined && t.tagName==='SELECT'){
+    S.covers[+t.dataset.i][t.dataset.f]=t.value; refresh(false);
+  }
+});
+document.addEventListener('blur', e=>{      // normalize 0701 -> 7.1.
+  const t=e.target;
+  if (t.dataset && (t.dataset.f==='d1'||t.dataset.f==='d2')){
+    const r=parseDate(t.value);
+    if (!r.error && r.text){ t.value=r.text; S.covers[+t.dataset.i][t.dataset.f]=r.text; refresh(false); }
+  }
+  if (t.dataset && t.dataset.f==='width'){
+    const w=Math.max(1.2, Math.min(20, parseFloat(t.value)||2.5));
+    t.value=w; S.covers[+t.dataset.i].width=w; refresh(false);
+  }
+}, true);
+document.addEventListener('click', e=>{
+  const b=e.target.closest('button'); if (!b||!b.dataset.act) return;
+  const a=b.dataset.act, i=+b.dataset.i;
+  if (a==='up'&&i>0){ [S.covers[i-1],S.covers[i]]=[S.covers[i],S.covers[i-1]]; refresh(); }
+  else if (a==='down'&&i<S.covers.length-1){ [S.covers[i+1],S.covers[i]]=[S.covers[i],S.covers[i+1]]; refresh(); }
+  else if (a==='dup'){ S.covers.splice(i+1,0,{...S.covers[i]}); refresh(); }
+  else if (a==='del'){ S.covers.splice(i,1); refresh(); }
+  else if (a==='settitle'){
+    S.covers[i].title=b.dataset.v;
+    const row=b.closest('tr'); const inp=row.querySelector('[data-f="title"]');
+    if (inp) inp.value=b.dataset.v;
+    b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x.dataset.v===b.dataset.v));
+    refresh(false);
+  }
+});
+
+$('#applyOrg').onclick  = ()=>{ S.org=$('#gOrg').value.trim();  S.covers.forEach(c=>c.org=S.org);   refresh(); };
+$('#applyYear').onclick = ()=>{ S.year=$('#gYear').value.trim(); S.covers.forEach(c=>c.year=S.year); refresh(); };
+$('#applyMonth').onclick= ()=>{ S.month=$('#gMonth').value;      S.covers.forEach(c=>c.month=S.month);refresh(); };
+$('#applyKeep').onclick = ()=>{ S.keep=$('#gKeep').value;        S.covers.forEach(c=>c.keep=S.keep);  refresh(); };
+$('#applyAcct').onclick = ()=>{ S.acct=$('#gAcct').value.trim(); S.covers.forEach(c=>c.acct=S.acct);  refresh(); };
+$('#gOrg').oninput  = e=>{ S.org=e.target.value; save(); };
+$('#gYear').oninput = e=>{ S.year=e.target.value; save(); };
+$('#gAcct').oninput = e=>{ S.acct=e.target.value; save(); };
+$('#gMonth').onchange = e=>{ S.month=e.target.value; save(); };
+$('#gKeep').onchange  = e=>{ S.keep=e.target.value; save(); };
+
+$('#seq').onclick = ()=>{
+  const base = S.covers[0] || newCover();
+  const mode = $('#cMode').value;
+  if (mode==='vol'){
+    const n = Math.max(1, Math.min(40, parseInt($('#cN').value)||1));
+    S.covers = Array.from({length:n},(_,i)=>({...base, vol:`${i+1}/${n}`}));
+  } else {
+    S.covers = Array.from({length:12},(_,m)=>({...base, month:String(m+1), vol:'1/1'}));
+  }
+  refresh();
+};
+$('#sample').onclick = ()=>{
+  const org = S.org || '광주여자고등학교';
+  const y = S.year || new Date().getFullYear();
+  S.covers = [1,2,3].map(i=>newCover({
+    title:'지출증빙서', year:y, month:'7', keep:'5년보존', acct:String(y),
+    vol:`${i}/3`, d1:'7.1.', d2:'7.10.', org, width:2.5
+  }));
+  S.org=org; applyGlobals(); refresh();
+};
+$('#reset').onclick = ()=>{ S.covers=[]; refresh(); };
+$('#addRow').onclick = ()=>{ S.covers.push(newCover()); refresh(); };
+$('#font').onchange = e=>{ S.font=e.target.value; applyGlobals(); refresh(false); };
+$('#cut').onchange  = e=>{ S.cut=e.target.checked; refresh(false); };
+$('#fsMinus').onclick=()=>{ S.k=Math.max(.5,+(S.k-.05).toFixed(2)); applyGlobals(); refresh(false); };
+$('#fsPlus').onclick =()=>{ S.k=Math.min(1.6,+(S.k+.05).toFixed(2)); applyGlobals(); refresh(false); };
+const setBg=c=>{S.bg=c;applyGlobals();save();};
+$('#bgColor').oninput=e=>setBg(e.target.value);
+$('#bgWhite').onclick=()=>setBg('#ffffff');
+$('#bgBlue').onclick=()=>setBg('#e8f1fc');
+$('#bgSky').onclick=()=>setBg('#d6e8fb');
+$('#printBtn').onclick = ()=>{
+  try { window.print(); }
+  catch(e){ $('#msg').textContent='이 화면에서는 인쇄 창이 열리지 않습니다. 키보드 Ctrl+P (Mac은 ⌘+P)로 인쇄해 주세요.'; }
+  setTimeout(()=>{ if(!document.hidden) $('#msg').textContent='인쇄 창이 뜨지 않으면 Ctrl+P (Mac ⌘+P)를 눌러 주세요.'; }, 900);
+};
+window.addEventListener('resize', ()=>{ clearTimeout(tmr); tmr=setTimeout(()=>{ preview(); },120); });
+
+/* init */
+for (let m=1;m<=12;m++) $('#gMonth').add(new Option(m+'월', String(m)));
+KEEPS.forEach(k=>$('#gKeep').add(new Option(k,k)));
+$('#titles').innerHTML = TITLES.map(t=>`<option>${esc(t)}</option>`).join('');
+applyGlobals();
+if (!S.covers.length) S.covers=[newCover()];
+refresh();
+document.fonts && document.fonts.ready.then(()=>preview());
+</script>
+</body>
+</html>
